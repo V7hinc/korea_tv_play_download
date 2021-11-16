@@ -1,0 +1,3 @@
+selenium
+browsermob-proxy
+beautifulsoup4
