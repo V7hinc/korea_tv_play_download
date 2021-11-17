@@ -1,15 +1,24 @@
 FROM centos:7
 
-WORKDIR /app/korea_tv_play_download
-
 COPY src /app/korea_tv_play_download
+
+WORKDIR /app/korea_tv_play_download/rely
 
 # 安装必要组件
 RUN set -x;\
-yum install java lrzsz python3 -y;\
+yum install unzip lrzsz python3 -y;\
+tar -xvf ffmpeg-git-amd64-static.tar.xz -C /usr/local/;\
+rm -rf ffmpeg-git-amd64-static.tar.xz;\
+ln -s /usr/local/ffmpeg-git-20211108-amd64-static/ffmpeg /usr/bin/ffmpeg;\
+tar xvf jre.tar.gz -C /usr/local/;\
+rm -rf jre.tar.gz;\
+ln -s /usr/local/jre/bin/java /usr/bin/java;
+
+WORKDIR /app/korea_tv_play_download/
+
+# 安装chrome
+RUN set -x;\
 sh module/install_chrome_driver.sh;
-
-
 # 安装python脚本运行依赖模块组件
 RUN set -x;\
 pip3 install -r requestsment.txt;

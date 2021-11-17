@@ -49,7 +49,7 @@ else:
     print('其他')
     chrome_driver_name = 'chromedriver_linux64'
 
-chrome_driver = os.path.join(BASE_DIR, 'module', chrome_driver_name)
+chrome_driver = os.path.join(BASE_DIR, 'rely', chrome_driver_name)
 os.chmod(chrome_driver, stat.S_IRWXU+stat.S_IRWXG)  # 如果没有执行权限，首次需要执行该命令
 
 
@@ -88,9 +88,9 @@ if __name__ == '__main__':
     args = get_args()
     video_url = args.video_url[0]
     if os_plat == 'Windows':
-        server = Server(os.path.join(BASE_DIR, "module/browsermob-proxy-2.1.4/bin/browsermob-proxy.bat"))
+        server = Server(os.path.join(BASE_DIR, "rely", "browsermob-proxy-2.1.4/bin/browsermob-proxy.bat"))
     else:
-        proxy_path = os.path.join(BASE_DIR, "module/browsermob-proxy-2.1.4/bin/browsermob-proxy")
+        proxy_path = os.path.join(BASE_DIR, "rely", "browsermob-proxy-2.1.4/bin/browsermob-proxy")
         os.chmod(proxy_path, stat.S_IRWXU + stat.S_IRWXG)  # 如果没有执行权限，首次需要执行该命令
         server = Server(proxy_path)
 
