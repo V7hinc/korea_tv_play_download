@@ -49,7 +49,7 @@ class downloadThread(threading.Thread):
         download_data(self.q)
         # print ("退出线程：" + self.name + '\n', end='')
 
-
+down_failed_list = []
 # 下载数据
 def download_data(q):
     while not _exitFlag:
@@ -59,7 +59,7 @@ def download_data(q):
             _queueLock.release()
             # print ("%s 使用了 %s" % (threadName, data) + '\n', end='')
             url = data
-            retry = 3
+            retry = 5
             while retry:
                 try:
                     r = session.get(url, timeout=20)
@@ -79,6 +79,7 @@ def download_data(q):
                     retry -= 1
             if retry == 0:
                 print('[FAIL]%s' % url)
+                down_failed_list.append(url)
         else:
             _queueLock.release()
 
@@ -213,6 +214,8 @@ def ffmpeg_merge_file(ts_list):
     global _dir
     ts_file_list = []
     while index < _ts_total:
+        if ts_list[index] in down_failed_list:  # 当下载失败就不要了
+            continue
         file_name = ts_list[index].split('/')[-1].split('?')[0]
         # print(file_name)
         percent = (index + 1) / _ts_total
