@@ -8,8 +8,6 @@
 """
 
 # 正式代码
-# coding: utf-8
-
 import requests
 import urllib.parse
 import os
@@ -19,6 +17,8 @@ import queue
 import threading
 import random
 import string
+from module.setting import ffmpeg
+
 
 threadListSize = 48
 queueSize = 96
@@ -145,7 +145,7 @@ def start(m3u8_url, dir, videoName):
                     # 整合ts文件
                     print('\n开始整合文件')
                     print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
-                    ffmpeg_merge_file(ts_list)
+                    ffmpeg_merge_file(ts_list, body_list)
                     print('')
                     print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
                 else:
@@ -179,40 +179,15 @@ def download(ts_list):
         t.join()
     return True
 
-
-# 将TS文件整合在一起,次方式合并结果存在错误
-# def merge_file(ts_list):
-#     index = 0
-#     outfile = ''
-#     global _dir
-#     while index < _ts_total:
-#         file_name = ts_list[index].split('/')[-1].split('?')[0]
-#         # print(file_name)
-#         percent = (index + 1) / _ts_total
-#         show_progress(percent)
-#         infile = open(os.path.join(_dir, file_name), 'rb')
-#         if not outfile:
-#             global _videoName
-#             if _videoName == '':
-#                 videoName = file_name.split('.')[0] + '_all'
-#             outfile = open(os.path.join(_dir, _videoName + '.mp4'), 'wb')
-#         outfile.write(infile.read())
-#         infile.close()
-#         # 删除临时ts文件
-#         os.remove(os.path.join(_dir, file_name))
-#         index += 1
-#     if outfile:
-#         outfile.close()
-
 def get_random(r_num):
     return ''.join(random.sample(string.digits * 2 + string.ascii_letters, r_num))
 
 
 # 通过ffmpeg将TS文件整合在一起
-def ffmpeg_merge_file(ts_list):
+def ffmpeg_merge_file(ts_list, body_list):
     index = 0
     global _dir
-    ts_file_list = []
+    ts_url_file_dict = {}
     while index < _ts_total:
         if ts_list[index] in down_failed_list:  # 当下载失败就不要了
             continue
@@ -221,21 +196,28 @@ def ffmpeg_merge_file(ts_list):
         percent = (index + 1) / _ts_total
         show_progress(percent)
         ts_file_path = os.path.join(_dir, file_name)
-        ts_file_list.append(ts_file_path)
+        ts_url_file_dict[ts_list[index]] = ts_file_path.replace('\\', '/')
         index += 1
-    ts_file_path_text = os.path.join(_dir, f'{get_random(20)}.ts_file_path_text')  # 存储ts本地路径的文件
-    with open(ts_file_path_text, 'w', newline='', encoding='utf-8') as f:
-        f.write('\n'.join([f"file '{x}'" for x in ts_file_list]))
+    mod_m3u8_file = os.path.join(_dir, f'{get_random(20)}.m3u8')  # 存储ts本地路径的文件
+
+    with open(mod_m3u8_file, 'w', newline='', encoding='utf-8') as f:
+        for line in body_list:
+            ts_url_file = ts_url_file_dict.get(line.strip())
+            if ts_url_file is not None:  # 如果不为空说明是下载到本地了的ts文件
+                write_content = ts_url_file
+            else:
+                write_content = line
+            f.write(write_content+"\n")  # 把注释文件写在上面，有些是加密文件
 
     outfile = os.path.join(_dir, _videoName+'.mp4')
     # ffmpeg执行合并
-    merge_cmd = f"ffmpeg -f concat -safe 0 -i {ts_file_path_text} -c copy '{outfile}'"
+    merge_cmd = f'{ffmpeg} -allowed_extensions ALL -protocol_whitelist "file,http,https,tls,crypto,tcp" -i {mod_m3u8_file} -c copy "{outfile}"'
     print(merge_cmd)
     os.popen(merge_cmd).read()
 
     # 清理ts数据
-    os.remove(ts_file_path_text)
-    for ts_file in ts_file_list:
+    os.remove(mod_m3u8_file)
+    for ts_file in ts_url_file_dict.values():
         os.remove(ts_file)
 
 
@@ -276,3 +258,4 @@ def m3u8Downloader(m3u8_url_list: list, videoNameList: list, dirpath, ):
         _count = 0
         _exitFlag = 0
         start(real_url, dirpath, videoName)
+

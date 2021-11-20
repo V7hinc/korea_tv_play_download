@@ -15,9 +15,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import time
 import os
-import platform
-import stat
-from module.setting import BASE_DIR
+from module.setting import BASE_DIR, os_plat, browsermob_proxy, chrome_driver
 from module.get_html_title import get_html_title
 from module.m3u8Downloader import m3u8Downloader
 
@@ -34,23 +32,6 @@ def get_args():
     return args
 
 
-# 是被当前操作系统
-os_plat = platform.system()
-if os_plat == 'Windows':
-    print('Windows系统')
-    chrome_driver_name = 'chromedriver_win32.exe'
-elif os_plat == 'Linux':
-    print('Linux系统')
-    chrome_driver_name = 'chromedriver_linux64'
-elif os_plat == 'Darwin':
-    print('Darwin系统')
-    chrome_driver_name = 'chromedriver_mac64'
-else:
-    print('其他')
-    chrome_driver_name = 'chromedriver_linux64'
-
-chrome_driver = os.path.join(BASE_DIR, 'rely', chrome_driver_name)
-os.chmod(chrome_driver, stat.S_IRWXU+stat.S_IRWXG)  # 如果没有执行权限，首次需要执行该命令
 
 
 def get_m3u8_link(video_url):
@@ -87,13 +68,7 @@ def get_m3u8_link(video_url):
 if __name__ == '__main__':
     args = get_args()
     video_url = args.video_url[0]
-    if os_plat == 'Windows':
-        server = Server(os.path.join(BASE_DIR, "rely", "browsermob-proxy-2.1.4/bin/browsermob-proxy.bat"))
-    else:
-        proxy_path = os.path.join(BASE_DIR, "rely", "browsermob-proxy-2.1.4/bin/browsermob-proxy")
-        os.chmod(proxy_path, stat.S_IRWXU + stat.S_IRWXG)  # 如果没有执行权限，首次需要执行该命令
-        server = Server(proxy_path)
-
+    server = Server(browsermob_proxy)
     server.start()  # 启动代理服务器
     proxy = server.create_proxy()
 
