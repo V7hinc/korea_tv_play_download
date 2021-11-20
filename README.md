@@ -19,7 +19,7 @@ docker run --rm  -v `pwd`/log:/app/korea_tv_play_download/src/log -it korea_tv_p
 > docker镜像直接拉取（推荐）
 ```shell script
 docker pull ghcr.io/v7hinc/korea_tv_play_download:latest
-docker run --rm  -v `pwd`/log:/app/korea_tv_play_download/src -it ghcr.io/v7hinc/korea_tv_play_download:latest -u https://www.kan.cc/play/2563-0-0.html
+docker run --rm  -v `pwd`/log:/app/korea_tv_play_download/src/log -it ghcr.io/v7hinc/korea_tv_play_download:latest -u https://www.kan.cc/play/2563-0-0.html
 ```
 
 ## 报错解决
